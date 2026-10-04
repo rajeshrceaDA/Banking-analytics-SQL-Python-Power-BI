@@ -65,7 +65,7 @@ FROM customer
 GROUP BY customer_id
 HAVING COUNT(*) > 1;
 
---To get not any duplicacy
+-- Duplicate customer IDs detected: 0
 -- ============================================================
 -- 3. DUPLICATE BRANCH IDs
 -- ============================================================
@@ -78,7 +78,7 @@ FROM branches
 GROUP BY branch_id
 HAVING COUNT(*) > 1;
 
-
+--Duplicate branch IDs detected: 0
 -- ============================================================
 -- 4. DUPLICATE ACCOUNT IDs
 -- ============================================================
@@ -91,7 +91,7 @@ FROM account
 GROUP BY account_id
 HAVING COUNT(*) > 1;
 
-
+--Duplicate account IDs detected: 0
 -- ============================================================
 -- 5. DUPLICATE TRANSACTION IDs
 -- ============================================================
@@ -104,7 +104,7 @@ FROM transactions
 GROUP BY transaction_id
 HAVING COUNT(*) > 1;
 
-
+--Duplicate  transaction IDs detected: 0
 -- ============================================================
 -- 6. NULL CHECK - CUSTOMER TABLE
 -- ============================================================
