@@ -1,2 +1,2 @@
-# Banking-Analytics-SQL_Python-PowerBI
+# Banking-Analytics-SQL-Python-PowerBI
 ## End to end banking analytics project
