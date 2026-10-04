@@ -1,5 +1,5 @@
 -- ============================================================
--- BANKING ANALYTICS PROJECT
+-- # BANKING ANALYTICS PROJECT
 -- DATA QUALITY CHECKS
 -- ============================================================
 -- Purpose:
@@ -332,7 +332,7 @@ SELECT
     t.account_id,
     t.transaction_date,
     a.account_open_date
-FROM transactionS t
+FROM transactions t
 JOIN account a
     ON t.account_id = a.account_id
 WHERE t.transaction_date < a.account_open_date;
@@ -381,6 +381,17 @@ SELECT
     COUNT(*) AS zero_amount_transactions
 FROM transactionS
 WHERE amount = 0;
+
+-- ============================================================
+-- DATA QUALITY FINDINGS
+-- Confirmed findings based on initial checks:
+--
+-- 1. customer table contains 10,000 rows.
+-- 2. account table contains 19,900 rows.
+-- 3. branches table contains 200 rows.
+-- 4. transactions table contains 497,496 rows.
+-- 5. Initial duplicate checks found no duplicate key values.
+-- 6. 50 NULL values were reported in customer.email.
 
 
 -- ============================================================
