@@ -21,7 +21,7 @@ DESC branches;
 DESC customer;
 DESC transactions;
 
--- To get each table data type currect and valid 
+-- To get each table columns data type currect and valid 
 
 -- ============================================================
 -- 1. TABLE ROW COUNT
@@ -48,9 +48,12 @@ UNION ALL
 SELECT 'transaction' table_name, COUNT(*)
 FROM transactions;
 
+-- ===========================
+-- To get each Tables Rows
+
 customers	10000
 accounts	19900
-Braches	  200
+Braches	     200
 Transcations	497496
 
 -- ============================================================
@@ -66,6 +69,7 @@ GROUP BY customer_id
 HAVING COUNT(*) > 1;
 
 -- Duplicate customer IDs detected: 0
+
 -- ============================================================
 -- 3. DUPLICATE BRANCH IDs
 -- ============================================================
@@ -79,6 +83,7 @@ GROUP BY branch_id
 HAVING COUNT(*) > 1;
 
 --Duplicate branch IDs detected: 0
+
 -- ============================================================
 -- 4. DUPLICATE ACCOUNT IDs
 -- ============================================================
@@ -92,6 +97,7 @@ GROUP BY account_id
 HAVING COUNT(*) > 1;
 
 --Duplicate account IDs detected: 0
+
 -- ============================================================
 -- 5. DUPLICATE TRANSACTION IDs
 -- ============================================================
@@ -105,21 +111,22 @@ GROUP BY transaction_id
 HAVING COUNT(*) > 1;
 
 --Duplicate  transaction IDs detected: 0
+
 -- ============================================================
 -- 6. NULL CHECK - CUSTOMER TABLE
 -- ============================================================
 -- Check important customer fields for missing values.
 
 SELECT
-    SUM(customer_id IS NULL) AS customer_id_nulls,
-    SUM(first_name IS NULL) AS first_name_nulls,
-    SUM(last_name IS NULL) AS last_name_nulls,
-    SUM(email IS NULL) AS email_nulls,
-    SUM(city IS NULL) AS city_nulls,
-    SUM(state IS NULL) AS state_nulls,
-    SUM(date_of_birth IS NULL) AS dob_nulls,
-    SUM(customer_segment IS NULL) AS segment_nulls,
-    SUM(registration_date IS NULL) AS registration_date_nulls
+    SUM(customer_id IS NULL OR TRIM(customer_id) = '') AS customer_id_nulls,
+    SUM(first_name IS NULL OR TRIM(first_name) = '') AS first_name_nulls,
+    SUM(last_name IS NULL OR TRIM(last_name) = '') AS last_name_nulls,
+    SUM(email IS NULL OR TRIM(email) = '') AS email_nulls,
+    SUM(city IS NULL OR TRIM(city) = '') AS city_nulls,
+    SUM(state IS NULL OR TRIM(state) = '') AS state_nulls,
+    SUM(date_of_birth IS NULL OR TRIM(date_of_birth) = '') AS dob_nulls,
+    SUM(customer_segment IS NULL OR TRIM(customer_segment) = '') AS segment_nulls,
+    SUM(registration_date IS NULL OR TRIM(registration_date) = '') AS registration_date_nulls
 FROM customer;
 
 
@@ -129,11 +136,11 @@ FROM customer;
 -- Check important branch fields for missing values.
 
 SELECT
-    SUM(branch_id IS NULL) AS branch_id_nulls,
-    SUM(branch_name IS NULL) AS branch_name_nulls,
-    SUM(city IS NULL) AS city_nulls,
-    SUM(state IS NULL) AS state_nulls,
-    SUM(region IS NULL) AS region_nulls
+    SUM(branch_id IS NULL OR TRIM(branch_id) = '') AS branch_id_nulls,
+    SUM(branch_name IS NULL OR TRIM(branch_name) = '') AS branch_name_nulls,
+    SUM(city IS NULL OR TRIM(city) = '') AS city_nulls,
+    SUM(state IS NULL OR TRIM(state) = '') AS state_nulls,
+    SUM(region IS NULL OR TRIM(region) = '') AS region_nulls
 FROM branches;
 
 
@@ -143,13 +150,13 @@ FROM branches;
 -- Check important account fields for missing values.
 
 SELECT
-    SUM(account_id IS NULL) AS account_id_nulls,
-    SUM(customer_id IS NULL) AS customer_id_nulls,
-    SUM(account_type IS NULL) AS account_type_nulls,
-    SUM(account_open_date IS NULL) AS account_open_date_nulls,
-    SUM(account_status IS NULL) AS account_status_nulls,
+    SUM(account_id IS NULL OR TRIM(account_id) = '') AS account_id_nulls,
+    SUM(customer_id IS NULL OR TRIM(customer_id) = '') AS customer_id_nulls,
+    SUM(account_type IS NULL OR TRIM(account_type) = '') AS account_type_nulls,
+    SUM(account_open_date IS NULL OR TRIM(account_open_date) = '') AS account_open_date_nulls,
+    SUM(account_status IS NULL OR TRIM(account_status) = '') AS account_status_nulls,
     SUM(balance IS NULL) AS balance_nulls,
-    SUM(branch_id IS NULL) AS branch_id_nulls
+    SUM(branch_id IS NULL OR TRIM(branch_id) = '') AS branch_id_nulls
 FROM account;
 
 
@@ -159,15 +166,15 @@ FROM account;
 -- Check important transaction fields for missing values.
 
 SELECT
-    SUM(transaction_id IS NULL) AS transaction_id_nulls,
-    SUM(account_id IS NULL) AS account_id_nulls,
-    SUM(transaction_date IS NULL) AS transaction_date_nulls,
-    SUM(transaction_type IS NULL) AS transaction_type_nulls,
+    SUM(transaction_id IS NULL OR TRIM(transaction_id) = '') AS transaction_id_nulls,
+    SUM(account_id IS NULL OR TRIM(account_id) = '') AS account_id_nulls,
+    SUM(transaction_date IS NULL OR TRIM(transaction_date) = '') AS transaction_date_nulls,
+    SUM(transaction_type IS NULL OR TRIM(transaction_type) = '') AS transaction_type_nulls,
     SUM(amount IS NULL) AS amount_nulls,
-    SUM(payment_method IS NULL) AS payment_method_nulls,
-    SUM(merchant IS NULL) AS merchant_nulls,
-    SUM(transaction_status IS NULL) AS transaction_status_nulls
-FROM transactions;
+    SUM(payment_method IS NULL OR TRIM(payment_method) = '') AS payment_method_nulls,
+    SUM(merchant IS NULL OR TRIM(merchant) = '') AS merchant_nulls,
+    SUM(transaction_status IS NULL OR TRIM(transaction_status) = '') AS transaction_status_nulls
+FROM `transaction`;
 
 
 -- ============================================================
@@ -233,7 +240,7 @@ ORDER BY account_count DESC;
 SELECT
     transaction_status,
     COUNT(*) AS transaction_count
-FROM `transaction`
+FROM transactionS
 GROUP BY transaction_status
 ORDER BY transaction_count DESC;
 
@@ -289,7 +296,7 @@ SELECT
     'Transactions',
     MIN(transaction_date),
     MAX(transaction_date)
-FROM `transactions`;
+FROM transactions;
 
 
 -- ============================================================
@@ -325,7 +332,7 @@ SELECT
     t.account_id,
     t.transaction_date,
     a.account_open_date
-FROM `transaction` t
+FROM transactionS t
 JOIN account a
     ON t.account_id = a.account_id
 WHERE t.transaction_date < a.account_open_date;
@@ -358,7 +365,7 @@ SELECT
     account_id,
     transaction_type,
     amount
-FROM `transaction`
+FROM transactionS
 WHERE amount < 0;
 
 
@@ -372,7 +379,7 @@ WHERE amount < 0;
 
 SELECT
     COUNT(*) AS zero_amount_transactions
-FROM `transaction`
+FROM transactionS
 WHERE amount = 0;
 
 
