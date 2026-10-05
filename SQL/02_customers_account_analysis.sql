@@ -1,10 +1,10 @@
 -- ============================================================
 -- Customer & Account Analysis
 -- Database: Banking Analytics
--- Purpose: Understand customer coverage, account ownership,
---          and account distribution across customers.
+-- Purpose:
+-- Analyze customer segments, age groups, account ownership,
+-- and account balance distribution.
 -- ============================================================
-
 
 USE banking;
 
@@ -27,20 +27,20 @@ FROM customer;
 --
 -- Insight:
 -- The customer table contains 10,000 customer records,
--- and all customer IDs are unique.
+-- with no duplicate customer IDs.
 
 
 -- ============================================================
 -- 2. Account and Customer Coverage
 -- Business Question:
--- How many accounts exist, and how many unique customers
--- currently have accounts?
+-- How many accounts exist and how many unique customers
+-- have at least one account?
 -- ============================================================
 
 SELECT
     COUNT(*) AS total_accounts,
     COUNT(DISTINCT account_id) AS total_unique_accounts,
-    COUNT(DISTINCT customer_id) AS total_unique_customers
+    COUNT(DISTINCT customer_id) AS customers_with_accounts
 FROM account;
 
 -- Result:
@@ -49,15 +49,14 @@ FROM account;
 -- Customers with accounts = 8,665
 --
 -- Insight:
--- There are 19,900 accounts across 8,665 unique customers.
--- Since the number of accounts is higher than the number
--- of customers with accounts, some customers hold multiple accounts.
+-- 19,900 accounts are associated with 8,665 unique customers.
+-- This indicates that some customers hold multiple accounts.
 
 
 -- ============================================================
 -- 3. Customers Without Accounts
 -- Business Question:
--- How many registered customers do not have any account?
+-- How many registered customers do not have an account?
 -- ============================================================
 
 SELECT
@@ -75,16 +74,16 @@ LEFT JOIN account a
 -- Customers without accounts = 1,335
 --
 -- Insight:
--- 1,335 registered customers do not have an account.
--- This represents a potential customer activation or
--- account-conversion opportunity.
+-- 1,335 customers in the customer master do not have an
+-- associated account record. This can be investigated further
+-- as a potential customer activation or conversion opportunity.
 
 
 -- ============================================================
 -- 4. Average Accounts per Customer
 -- Business Question:
--- On average, how many accounts are held by each
--- customer who has at least one account?
+-- How many accounts are held on average by customers
+-- who have at least one account?
 -- ============================================================
 
 SELECT
@@ -103,23 +102,168 @@ FROM account;
 -- Average accounts per customer = 2.297
 --
 -- Insight:
--- Customers with accounts hold an average of approximately
--- 2.3 accounts each, indicating that multiple-account
--- ownership is common in the dataset.
+-- Customers with accounts hold approximately 2.3 accounts
+-- on average, indicating multi-account ownership in the dataset.
 
 
 -- ============================================================
--- Key Findings
+-- 5. Customer Segment Analysis
+-- Business Question:
+-- How are customers distributed across customer segments?
+-- ============================================================
+
+SELECT
+    customer_segment,
+    COUNT(*) AS total_customers,
+    ROUND(
+        COUNT(*) * 100.0 /
+        (SELECT COUNT(*) FROM customer),
+        2
+    ) AS customer_contribution_percentage
+FROM customer
+GROUP BY customer_segment
+ORDER BY total_customers DESC;
+
+-- Result:
+-- Standard = 3,376 customers (33.76%)
+-- Premium  = 3,341 customers (33.41%)
+-- Business = 3,283 customers (32.83%)
+--
+-- Insight:
+-- Customer distribution is relatively balanced across the
+-- three segments. Standard has the highest customer count,
+-- followed closely by Premium and Business.
+--
+-- This balanced distribution allows further comparison of
+-- account ownership, balances, and transaction behavior
+-- across segments.
+
+
+-- ============================================================
+-- 6. Customer Age Group Analysis
+-- Business Question:
+-- What is the approximate age-group distribution of customers?
+-- ============================================================
+
+WITH customer_age AS
+(
+    SELECT
+        customer_id,
+        2026 - YEAR(date_of_birth) AS age_in_years
+    FROM customer
+),
+
+age_break AS
+(
+    SELECT
+        customer_id,
+        age_in_years,
+        CASE
+            WHEN age_in_years <= 25 THEN 'Youth (0-25)'
+            WHEN age_in_years <= 45 THEN 'Young (26-45)'
+            WHEN age_in_years <= 60 THEN 'Old (46-60)'
+            ELSE 'Very Old (61+)'
+        END AS age_group
+    FROM customer_age
+)
+
+SELECT
+    age_group,
+    COUNT(customer_id) AS total_customers,
+    ROUND(
+        COUNT(customer_id) * 100.0 /
+        (SELECT COUNT(*) FROM customer),
+        2
+    ) AS customer_percentage
+FROM age_break
+GROUP BY age_group
+ORDER BY total_customers DESC;
+
+-- Result:
+-- Very Old (61+) = 3,232 customers (32.32%)
+-- Young (26-45)  = 3,134 customers (31.34%)
+-- Old (46-60)    = 2,455 customers (24.55%)
+-- Youth (0-25)   = 1,179 customers (11.79%)
+--
+-- Insight:
+-- The 61+ age group represents the largest customer segment
+-- in the dataset, followed closely by customers aged 26-45.
+-- Customers aged 0-25 represent the smallest group.
+--
+-- Note:
+-- Age is calculated using the year 2026 and YEAR(date_of_birth).
+-- This provides an approximate age grouping rather than an
+-- exact age based on the customer's birth date.
+
+
+-- ============================================================
+-- 7. Customer Account Balance Analysis
+-- Business Question:
+-- What is the overall account balance position and average
+-- balance across accounts and account-holding customers?
+-- ============================================================
+
+SELECT
+    ROUND(SUM(balance), 2) AS total_account_balance,
+    ROUND(MAX(balance), 2) AS max_account_balance,
+    ROUND(MIN(balance), 2) AS min_account_balance,
+    ROUND(
+        SUM(balance) /
+        COUNT(DISTINCT account_id),
+        2
+    ) AS avg_account_balance,
+    ROUND(
+        SUM(balance) /
+        COUNT(DISTINCT customer_id),
+        2
+    ) AS avg_balance_per_customer
+FROM account;
+
+-- Result:
+-- Total account balance = 4,991,145,230.41
+-- Maximum account balance = 499,977.56
+-- Minimum account balance = 529.45
+-- Average account balance = 250,811.32
+-- Average balance per customer = 576,012.14
+--
+-- Insight:
+-- The dataset contains approximately 4.99 billion in total
+-- account balances.
+--
+-- The average account balance is approximately 250.8K,
+-- while the average balance per account-holding customer
+-- is approximately 576.0K.
+--
+-- The difference between these two averages is driven by
+-- customers holding multiple accounts.
+
+
+-- ============================================================
+-- KEY CUSTOMER & ACCOUNT FINDINGS
 -- ============================================================
 --
 -- 1. The dataset contains 10,000 unique customers.
--- 2. There are 19,900 unique accounts.
--- 3. 8,665 customers have at least one account.
--- 4. 1,335 customers do not have an account.
--- 5. Account-holding customers have an average of
+--
+-- 2. There are 19,900 unique accounts associated with
+--    8,665 customers.
+--
+-- 3. 1,335 customers do not have an associated account.
+--
+-- 4. Account-holding customers have an average of
 --    approximately 2.3 accounts each.
 --
--- These findings provide the base for further analysis of
--- account types, account status, customer segments,
--- and account balances.
+-- 5. Customer segments are relatively balanced:
+--    Standard 33.76%, Premium 33.41%, Business 32.83%.
+--
+-- 6. The 61+ age group is the largest customer age group
+--    at 32.32%, while the 0-25 group is the smallest
+--    at 11.79%.
+--
+-- 7. Total account balance is approximately 4.99 billion,
+--    with an average account balance of approximately 250.8K.
+--
+-- ============================================================
+-- Next Analysis:
+-- Account type, account status, transaction activity,
+-- failed transactions, risk indicators, and business insights.
 -- ============================================================
