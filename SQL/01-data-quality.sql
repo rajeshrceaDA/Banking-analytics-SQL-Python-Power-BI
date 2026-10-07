@@ -1,65 +1,70 @@
+USE banking;
+
 -- ============================================================
--- # BANKING ANALYTICS PROJECT
--- DATA QUALITY CHECKS
--- ============================================================
+-- BANKING ANALYTICS PROJECT
+-- File: Data Quality.sql
 -- Purpose:
--- To validate the completeness, uniqueness, consistency,
--- integrity and basic validity of the banking data before
--- performing business analysis.
+-- Validate data integrity, completeness, consistency and
+-- basic business-rule exceptions across the banking database.
 --
 -- Tables:
--- 1. customer
--- 2. branches
--- 3. account
--- 4. transaction
--- ============================================================
---  To understand Data and Data types 
+-- 1. customer       - Customer master data
+-- 2. account        - Customer account information
+-- 3. branches       - Branch master data
+-- 4. transactions   - Transaction-level data
 -- ============================================================
 
+
+-- ============================================================
+-- 1. TABLE STRUCTURE CHECK
+-- Business Question:
+-- What fields are available in each banking table?
+-- ============================================================
+
+DESC customer;
 DESC account;
 DESC branches;
-DESC customer;
 DESC transactions;
 
--- To get each table columns data type currect and valid 
 
 -- ============================================================
--- 1. TABLE ROW COUNT
+-- 2. TABLE ROW COUNT
+-- Business Question:
+-- How much data is available in each table?
 -- ============================================================
--- Business Purpose:
--- Verify that all expected tables contain data and understand
--- the approximate size of each dataset.
 
-SELECT 'customer' AS table_name, COUNT(*) AS row_count
+SELECT 'customer' AS table_name, COUNT(*) AS total_rows
 FROM customer
 
 UNION ALL
 
-SELECT 'branches' AS table_name, COUNT(*)
-FROM branches
-
-UNION ALL
-
-SELECT 'account' table_name, COUNT(*)
+SELECT 'account' AS table_name, COUNT(*) AS total_rows
 FROM account
 
 UNION ALL
 
-SELECT 'transaction' table_name, COUNT(*)
+SELECT 'branches' AS table_name, COUNT(*) AS total_rows
+FROM branches
+
+UNION ALL
+
+SELECT 'transactions' AS table_name, COUNT(*) AS total_rows
 FROM transactions;
 
--- ===========================
--- To get each Tables Rows
 
-customers	10000
-accounts	19900
-Braches	     200
-Transcations	497496
+-- Expected dataset size:
+-- Customer      : 10,000
+-- Account       : 19,900
+-- Branches      : 200
+-- Transactions  : 497,496
+-- Total         : 527,596
+
 
 -- ============================================================
--- 2. DUPLICATE CUSTOMER IDs
+-- 3. DUPLICATE CUSTOMER ID CHECK
+-- Business Question:
+-- Are customer IDs unique?
 -- ============================================================
--- customer_id should uniquely identify each customer.
 
 SELECT
     customer_id,
@@ -68,12 +73,16 @@ FROM customer
 GROUP BY customer_id
 HAVING COUNT(*) > 1;
 
--- Duplicate customer IDs detected: 0
+
+-- Result:
+-- No duplicate customer IDs identified.
+
 
 -- ============================================================
--- 3. DUPLICATE BRANCH IDs
+-- 4. DUPLICATE BRANCH ID CHECK
+-- Business Question:
+-- Are branch IDs unique?
 -- ============================================================
--- branch_id should uniquely identify each branch.
 
 SELECT
     branch_id,
@@ -82,12 +91,16 @@ FROM branches
 GROUP BY branch_id
 HAVING COUNT(*) > 1;
 
---Duplicate branch IDs detected: 0
+
+-- Result:
+-- No duplicate branch IDs identified.
+
 
 -- ============================================================
--- 4. DUPLICATE ACCOUNT IDs
+-- 5. DUPLICATE ACCOUNT ID CHECK
+-- Business Question:
+-- Are account IDs unique?
 -- ============================================================
--- account_id should uniquely identify each account.
 
 SELECT
     account_id,
@@ -96,12 +109,16 @@ FROM account
 GROUP BY account_id
 HAVING COUNT(*) > 1;
 
---Duplicate account IDs detected: 0
+
+-- Result:
+-- No duplicate account IDs identified.
+
 
 -- ============================================================
--- 5. DUPLICATE TRANSACTION IDs
+-- 6. DUPLICATE TRANSACTION ID CHECK
+-- Business Question:
+-- Are transaction IDs unique?
 -- ============================================================
--- transaction_id should uniquely identify each transaction.
 
 SELECT
     transaction_id,
@@ -110,290 +127,504 @@ FROM transactions
 GROUP BY transaction_id
 HAVING COUNT(*) > 1;
 
---Duplicate  transaction IDs detected: 0
+
+-- Result:
+-- No duplicate transaction IDs identified.
+
 
 -- ============================================================
--- 6. NULL CHECK - CUSTOMER TABLE
+-- 7. NULL CHECK - CUSTOMER
+-- Business Question:
+-- Are important customer fields missing?
 -- ============================================================
--- Check important customer fields for missing values.
 
 SELECT
-    SUM(customer_id IS NULL OR TRIM(customer_id) = '') AS customer_id_nulls,
-    SUM(first_name IS NULL OR TRIM(first_name) = '') AS first_name_nulls,
-    SUM(last_name IS NULL OR TRIM(last_name) = '') AS last_name_nulls,
-    SUM(email IS NULL OR TRIM(email) = '') AS email_nulls,
-    SUM(city IS NULL OR TRIM(city) = '') AS city_nulls,
-    SUM(state IS NULL OR TRIM(state) = '') AS state_nulls,
-    SUM(date_of_birth IS NULL OR TRIM(date_of_birth) = '') AS dob_nulls,
-    SUM(customer_segment IS NULL OR TRIM(customer_segment) = '') AS segment_nulls,
-    SUM(registration_date IS NULL OR TRIM(registration_date) = '') AS registration_date_nulls
+    COUNT(*) AS total_customers,
+
+    SUM(customer_id IS NULL) AS null_customer_id,
+    SUM(first_name IS NULL) AS null_first_name,
+    SUM(last_name IS NULL) AS null_last_name,
+    SUM(email IS NULL) AS null_email,
+    SUM(city IS NULL) AS null_city,
+    SUM(state IS NULL) AS null_state,
+    SUM(date_of_birth IS NULL) AS null_date_of_birth,
+    SUM(customer_segment IS NULL) AS null_customer_segment,
+    SUM(registration_date IS NULL) AS null_registration_date
+
 FROM customer;
 
 
+-- Actual finding:
+-- 50 customer records have NULL email values.
+-- Other checked customer fields have 0 NULL values.
+
+
 -- ============================================================
--- 7. NULL CHECK - BRANCH TABLE
+-- 8. NULL CHECK - BRANCH
+-- Business Question:
+-- Are important branch fields missing?
 -- ============================================================
--- Check important branch fields for missing values.
 
 SELECT
-    SUM(branch_id IS NULL OR TRIM(branch_id) = '') AS branch_id_nulls,
-    SUM(branch_name IS NULL OR TRIM(branch_name) = '') AS branch_name_nulls,
-    SUM(city IS NULL OR TRIM(city) = '') AS city_nulls,
-    SUM(state IS NULL OR TRIM(state) = '') AS state_nulls,
-    SUM(region IS NULL OR TRIM(region) = '') AS region_nulls
+    COUNT(*) AS total_branches,
+
+    SUM(branch_id IS NULL) AS null_branch_id,
+    SUM(branch_name IS NULL) AS null_branch_name,
+    SUM(city IS NULL) AS null_city,
+    SUM(state IS NULL) AS null_state,
+    SUM(region IS NULL) AS null_region
+
 FROM branches;
 
 
+-- Actual finding:
+-- No NULL values identified in the checked branch fields.
+
+
 -- ============================================================
--- 8. NULL CHECK - ACCOUNT TABLE
+-- 9. NULL CHECK - ACCOUNT
+-- Business Question:
+-- Are important account fields missing?
 -- ============================================================
--- Check important account fields for missing values.
 
 SELECT
-    SUM(account_id IS NULL OR TRIM(account_id) = '') AS account_id_nulls,
-    SUM(customer_id IS NULL OR TRIM(customer_id) = '') AS customer_id_nulls,
-    SUM(account_type IS NULL OR TRIM(account_type) = '') AS account_type_nulls,
-    SUM(account_open_date IS NULL OR TRIM(account_open_date) = '') AS account_open_date_nulls,
-    SUM(account_status IS NULL OR TRIM(account_status) = '') AS account_status_nulls,
-    SUM(balance IS NULL) AS balance_nulls,
-    SUM(branch_id IS NULL OR TRIM(branch_id) = '') AS branch_id_nulls
+    COUNT(*) AS total_accounts,
+
+    SUM(account_id IS NULL) AS null_account_id,
+    SUM(customer_id IS NULL) AS null_customer_id,
+    SUM(account_type IS NULL) AS null_account_type,
+    SUM(account_open_date IS NULL) AS null_account_open_date,
+    SUM(account_status IS NULL) AS null_account_status,
+    SUM(balance IS NULL) AS null_balance,
+    SUM(branch_id IS NULL) AS null_branch_id
+
 FROM account;
 
 
+-- Actual finding:
+-- No NULL values identified in the checked account fields.
+
+
 -- ============================================================
--- 9. NULL CHECK - TRANSACTION TABLE
+-- 10. NULL CHECK - TRANSACTIONS
+-- Business Question:
+-- Are important transaction fields missing?
 -- ============================================================
--- Check important transaction fields for missing values.
 
 SELECT
-    SUM(transaction_id IS NULL OR TRIM(transaction_id) = '') AS transaction_id_nulls,
-    SUM(account_id IS NULL OR TRIM(account_id) = '') AS account_id_nulls,
-    SUM(transaction_date IS NULL OR TRIM(transaction_date) = '') AS transaction_date_nulls,
-    SUM(transaction_type IS NULL OR TRIM(transaction_type) = '') AS transaction_type_nulls,
-    SUM(amount IS NULL) AS amount_nulls,
-    SUM(payment_method IS NULL OR TRIM(payment_method) = '') AS payment_method_nulls,
-    SUM(merchant IS NULL OR TRIM(merchant) = '') AS merchant_nulls,
-    SUM(transaction_status IS NULL OR TRIM(transaction_status) = '') AS transaction_status_nulls
-FROM `transaction`;
+    COUNT(*) AS total_transactions,
+
+    SUM(transaction_id IS NULL) AS null_transaction_id,
+    SUM(account_id IS NULL) AS null_account_id,
+    SUM(transaction_date IS NULL) AS null_transaction_date,
+    SUM(transaction_type IS NULL) AS null_transaction_type,
+    SUM(amount IS NULL) AS null_amount,
+    SUM(payment_method IS NULL) AS null_payment_method,
+    SUM(merchant IS NULL) AS null_merchant,
+    SUM(transaction_status IS NULL) AS null_transaction_status
+
+FROM transactions;
+
+
+-- Actual finding:
+-- 2,484 transaction records have NULL merchant values.
+-- Other checked transaction fields have 0 NULL values.
+--
+-- Note:
+-- NULL merchant values are treated as a data-quality finding.
+-- Business validity should be investigated by transaction type
+-- and payment method before treating them as errors.
 
 
 -- ============================================================
--- 10. ORPHAN ACCOUNTS - CUSTOMER RELATIONSHIP
+-- 11. ORPHAN ACCOUNT - CUSTOMER RELATIONSHIP
+-- Business Question:
+-- Are there accounts linked to non-existing customers?
 -- ============================================================
--- Check whether every account belongs to an existing customer.
 
 SELECT
-    a.account_id,
-    a.customer_id
+    COUNT(*) AS orphan_accounts
 FROM account a
 LEFT JOIN customer c
     ON a.customer_id = c.customer_id
 WHERE c.customer_id IS NULL;
 
 
+-- Actual result:
+-- 0 orphan accounts.
+
+
 -- ============================================================
--- 11. ORPHAN ACCOUNTS - BRANCH RELATIONSHIP
+-- 12. ORPHAN ACCOUNT - BRANCH RELATIONSHIP
+-- Business Question:
+-- Are there accounts linked to non-existing branches?
 -- ============================================================
--- Check whether every account is linked to an existing branch.
 
 SELECT
-    a.account_id,
-    a.branch_id
+    COUNT(*) AS orphan_accounts
 FROM account a
 LEFT JOIN branches b
     ON a.branch_id = b.branch_id
 WHERE b.branch_id IS NULL;
 
 
+-- Actual result:
+-- 0 orphan accounts.
+
+
 -- ============================================================
--- 12. ORPHAN TRANSACTIONS - ACCOUNT RELATIONSHIP
+-- 13. ORPHAN TRANSACTION - ACCOUNT RELATIONSHIP
+-- Business Question:
+-- Are transactions linked to non-existing accounts?
 -- ============================================================
--- Check whether every transaction belongs to an existing account.
 
 SELECT
-    t.transaction_id,
-    t.account_id
+    COUNT(*) AS orphan_transactions
 FROM transactions t
 LEFT JOIN account a
     ON t.account_id = a.account_id
 WHERE a.account_id IS NULL;
 
 
+-- Actual result:
+-- 0 orphan transactions.
+
+
 -- ============================================================
--- 13. ACCOUNT STATUS DISTRIBUTION
+-- 14. ACCOUNT STATUS DISTRIBUTION
+-- Business Question:
+-- What is the distribution of account statuses?
 -- ============================================================
--- Identify available account statuses and their frequency.
 
 SELECT
     account_status,
-    COUNT(*) AS account_count
+    COUNT(*) AS total_accounts,
+    ROUND(
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM account),
+        2
+    ) AS account_percentage,
+    ROUND(SUM(balance), 2) AS total_balance
 FROM account
 GROUP BY account_status
-ORDER BY account_count DESC;
+ORDER BY total_accounts DESC;
+
+
+-- Actual result:
+--
+-- Active   : 11,856 | 59.58%
+-- Dormant  : 4,023  | 20.22%
+-- Closed   : 4,021  | 20.21%
 
 
 -- ============================================================
--- 14. TRANSACTION STATUS DISTRIBUTION
+-- 15. TRANSACTION STATUS DISTRIBUTION
+-- Business Question:
+-- What proportion of transactions are successful, pending
+-- or failed?
 -- ============================================================
--- Check Success, Failed and Pending transactions.
 
 SELECT
     transaction_status,
-    COUNT(*) AS transaction_count
-FROM transactionS
+    COUNT(*) AS total_transactions,
+    ROUND(
+        COUNT(*) * 100.0 /
+        (SELECT COUNT(*) FROM transactions),
+        2
+    ) AS transaction_percentage
+FROM transactions
 GROUP BY transaction_status
-ORDER BY transaction_count DESC;
+ORDER BY total_transactions DESC;
+
+
+-- Actual result:
+--
+-- Success  : 298,352 | 59.97%
+-- Pending  : 99,537  | 20.01%
+-- Failed   : 99,508  | 20.00%
+-- UNKNOWN  : 99      | 0.02%
+--
+-- Insight:
+-- Approximately 60% of transactions were successful.
+-- Pending and failed transactions each represent approximately
+-- 20% of total transactions.
+-- UNKNOWN status is a data-quality exception requiring review.
 
 
 -- ============================================================
--- 15. TRANSACTION TYPE DISTRIBUTION
+-- 16. TRANSACTION TYPE DISTRIBUTION
+-- Business Question:
+-- How are transactions distributed between Credit and Debit?
 -- ============================================================
--- Check whether transaction types contain expected values.
 
 SELECT
     transaction_type,
-    COUNT(*) AS transaction_count
+    COUNT(*) AS total_transactions,
+    ROUND(
+        COUNT(*) * 100.0 /
+        (SELECT COUNT(*) FROM transactions),
+        2
+    ) AS transaction_percentage
 FROM transactions
 GROUP BY transaction_type
-ORDER BY transaction_count DESC;
+ORDER BY total_transactions DESC;
+
+
+-- Actual result:
+--
+-- Credit : 248,939 | 50.04%
+-- Debit  : 248,557 | 49.96%
+--
+-- Insight:
+-- Credit and Debit transactions are almost evenly distributed,
+-- indicating a balanced transaction mix in the dataset.
 
 
 -- ============================================================
--- 16. PAYMENT METHOD DISTRIBUTION
+-- 17. PAYMENT METHOD DISTRIBUTION
+-- Business Question:
+-- Which payment methods are most frequently used?
 -- ============================================================
--- Understand the distribution of transaction payment methods.
 
 SELECT
     payment_method,
-    COUNT(*) AS transaction_count
+    COUNT(*) AS total_transactions,
+    ROUND(
+        COUNT(*) * 100.0 /
+        (SELECT COUNT(*) FROM transactions),
+        2
+    ) AS transaction_percentage
 FROM transactions
 GROUP BY payment_method
-ORDER BY transaction_count DESC;
+ORDER BY total_transactions DESC;
+
+
+-- Actual result:
+--
+-- IMPS : 83,447
+-- ATM  : 83,130
+-- UPI  : 82,934
+-- NEFT : 82,763
+-- RTGS : 82,684
+-- POS  : 82,538
+--
+-- Insight:
+-- Transaction volume is relatively evenly distributed across
+-- all six payment methods.
+-- IMPS has the highest transaction count, while POS has the lowest.
+-- No single payment method dominates the dataset.
 
 
 -- ============================================================
--- 17. DATE RANGE CHECK
+-- 18. DATE RANGE CHECK
+-- Business Question:
+-- What is the available data period across customers,
+-- accounts and transactions?
 -- ============================================================
--- Understand the time period covered by each major dataset.
 
 SELECT
-    'Customer Registration' AS data_area,
-    MIN(registration_date) AS minimum_date,
-    MAX(registration_date) AS maximum_date
+    'Customer Registration' AS data_entity,
+    MIN(registration_date) AS start_date,
+    MAX(registration_date) AS end_date
 FROM customer
 
 UNION ALL
 
 SELECT
-    'Account Opening',
-    MIN(account_open_date),
-    MAX(account_open_date)
+    'Account Opening' AS data_entity,
+    MIN(account_open_date) AS start_date,
+    MAX(account_open_date) AS end_date
 FROM account
 
 UNION ALL
 
 SELECT
-    'Transactions',
-    MIN(transaction_date),
-    MAX(transaction_date)
+    'Transactions' AS data_entity,
+    MIN(transaction_date) AS start_date,
+    MAX(transaction_date) AS end_date
 FROM transactions;
 
 
--- ============================================================
--- 18. ACCOUNT OPENED BEFORE CUSTOMER REGISTRATION
--- ============================================================
--- Potential data consistency issue:
--- An account should normally not be opened before the
--- customer's registration date.
+-- Actual result:
 --
--- NOTE:
--- Validate the business definition of registration_date
--- before treating these records as errors.
+-- Customer Registration : 2021-08-07 to 2026-08-07
+-- Account Opening       : 2021-08-07 to 2026-08-07
+-- Transactions          : 2025-08-07 to 2026-08-07
+--
+-- Insight:
+-- Customer and account data cover approximately five years,
+-- while transaction data covers approximately one year.
+-- Transaction trend analysis should therefore be interpreted
+-- within the available transaction period.
+
+
+-- ============================================================
+-- 19. ACCOUNT OPENED BEFORE CUSTOMER REGISTRATION
+-- Business Question:
+-- Are there accounts where the account opening date is earlier
+-- than the customer's registration date?
+--
+-- Business Rule:
+-- account_open_date should normally be >= registration_date.
+-- ============================================================
 
 SELECT
-    a.account_id,
-    a.customer_id,
-    a.account_open_date,
-    c.registration_date
+    COUNT(*) AS invalid_account_records
 FROM account a
 JOIN customer c
     ON a.customer_id = c.customer_id
 WHERE a.account_open_date < c.registration_date;
 
 
+-- Actual result:
+-- 10,103 records
+--
+-- Insight:
+-- 10,103 account records have an account opening date earlier
+-- than the corresponding customer registration date.
+--
+-- This is a potential data-quality/business-rule exception.
+-- Possible reasons may include historical data migration or
+-- differences in how registration and account-opening dates
+-- are defined in the source system.
+-- Further investigation is recommended before treating all
+-- records as invalid.
+
+
 -- ============================================================
--- 19. TRANSACTION BEFORE ACCOUNT OPENING
+-- 20. TRANSACTION BEFORE ACCOUNT OPENING
+-- Business Question:
+-- Are there transactions recorded before the related account
+-- was opened?
+--
+-- Business Rule:
+-- transaction_date should normally be >= account_open_date.
 -- ============================================================
--- A transaction should normally occur on or after
--- the account opening date.
 
 SELECT
-    t.transaction_id,
-    t.account_id,
-    t.transaction_date,
-    a.account_open_date
+    COUNT(*) AS invalid_transaction_records
 FROM transactions t
 JOIN account a
     ON t.account_id = a.account_id
 WHERE t.transaction_date < a.account_open_date;
 
 
+-- Result should be reviewed from the query output.
+-- Do not classify the records as invalid without investigating
+-- the source-system date definitions.
+
+
 -- ============================================================
--- 20. NEGATIVE ACCOUNT BALANCE
+-- 21. NEGATIVE ACCOUNT BALANCE
+-- Business Question:
+-- Are there accounts with a negative balance?
 -- ============================================================
--- Negative balances may be valid for overdraft-enabled
--- accounts, so these records require business validation.
 
 SELECT
-    account_id,
-    customer_id,
-    account_type,
-    balance
+    COUNT(*) AS negative_balance_accounts,
+    ROUND(SUM(balance), 2) AS total_negative_balance
 FROM account
 WHERE balance < 0;
 
 
+-- Negative balances may be valid in some banking products.
+-- Therefore, this should be treated as a validation check,
+-- not automatically as an error.
+
+
 -- ============================================================
--- 21. NEGATIVE TRANSACTION AMOUNT
+-- 22. NEGATIVE TRANSACTION AMOUNT
+-- Business Question:
+-- Are transaction amounts stored as negative values?
 -- ============================================================
--- Check whether transaction amounts contain negative values.
--- Whether negative values are valid depends on the data
--- recording convention.
 
 SELECT
-    transaction_id,
-    account_id,
-    transaction_type,
-    amount
-FROM transactionS
+    COUNT(*) AS negative_amount_transactions,
+    ROUND(SUM(amount), 2) AS total_negative_amount
+FROM transactions
 WHERE amount < 0;
 
 
+-- Negative amounts may indicate a specific transaction
+-- representation depending on the source-system design.
+-- Investigate transaction_type before classifying them as errors.
+
+
 -- ============================================================
--- 22. ZERO TRANSACTION AMOUNT
+-- 23. ZERO TRANSACTION AMOUNT
+-- Business Question:
+-- Are there transactions with zero monetary value?
 -- ============================================================
--- Zero-value transactions may indicate test, reversal,
--- system-generated or incomplete records.
--- These should be investigated rather than automatically
--- classified as errors.
 
 SELECT
     COUNT(*) AS zero_amount_transactions
-FROM transactionS
+FROM transactions
 WHERE amount = 0;
 
--- ============================================================
--- DATA QUALITY FINDINGS
--- Confirmed findings based on initial checks:
---
--- 1. customer table contains 10,000 rows.
--- 2. account table contains 19,900 rows.
--- 3. branches table contains 200 rows.
--- 4. transactions table contains 497,496 rows.
--- 5. Initial duplicate checks found no duplicate key values.
--- 6. 50 NULL values were reported in customer.email.
+
+-- Zero-value transactions may represent test, reversal,
+-- validation or system-generated records.
+-- Further investigation is required before classification.
 
 
 -- ============================================================
--- END OF DATA QUALITY CHECKS
+-- DATA QUALITY SUMMARY
 -- ============================================================
+
+/*
+DATASET SIZE
+--------------------------------------------------------------
+Customer Records       : 10,000
+Account Records        : 19,900
+Branch Records         : 200
+Transaction Records    : 497,496
+Total Records          : 527,596
+
+
+KEY DATA QUALITY FINDINGS
+--------------------------------------------------------------
+1. Duplicate customer IDs       : 0
+2. Duplicate account IDs        : 0
+3. Duplicate branch IDs         : 0
+4. Duplicate transaction IDs    : 0
+
+5. Customer email NULLs          : 50
+6. Transaction merchant NULLs    : 2,484
+
+7. Orphan accounts - customer    : 0
+8. Orphan accounts - branch      : 0
+9. Orphan transactions - account : 0
+
+10. UNKNOWN transaction status   : 99
+
+11. Account opened before
+    customer registration        : 10,103 records
+
+
+KEY OBSERVATIONS
+--------------------------------------------------------------
+- Primary identifiers are unique across the checked tables.
+- Referential integrity checks returned no orphan records.
+- Missing customer emails represent a small data-completeness
+  issue.
+- Missing merchant values are present in 2,484 transactions
+  and require business-context investigation.
+- Approximately 60% of transactions are successful.
+- Pending and failed transactions each account for
+  approximately 20% of transactions.
+- Credit and Debit transaction volumes are almost equal.
+- Payment methods have relatively balanced transaction volumes.
+- Customer/account data covers approximately five years,
+  while transaction data covers approximately one year.
+- 10,103 account records violate the expected chronological
+  relationship between customer registration and account opening.
+
+NEXT ANALYSIS
+--------------------------------------------------------------
+Transaction-level performance, failed transaction analysis,
+risk patterns and business insights are covered separately
+in:
+
+    Transaction Analysis.sql
+    Failed and Risk Analysis.sql
+    Business Analysis and Insight.sql
+*/
