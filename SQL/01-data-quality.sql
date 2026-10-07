@@ -476,19 +476,10 @@ WHERE a.account_open_date < c.registration_date;
 
 
 -- Actual result:
--- 10,103 records
+-- 0 records
 --
 -- Insight:
--- 10,103 account records have an account opening date earlier
--- than the corresponding customer registration date.
---
--- This is a potential data-quality/business-rule exception.
--- Possible reasons may include historical data migration or
--- differences in how registration and account-opening dates
--- are defined in the source system.
--- Further investigation is recommended before treating all
--- records as invalid.
-
+-- 0 account records have an account opening date earlier
 
 -- ============================================================
 -- 20. TRANSACTION BEFORE ACCOUNT OPENING
@@ -507,10 +498,7 @@ JOIN account a
     ON t.account_id = a.account_id
 WHERE t.transaction_date < a.account_open_date;
 
-
--- Result should be reviewed from the query output.
--- Do not classify the records as invalid without investigating
--- the source-system date definitions.
+-- Actual Result = 0
 
 
 -- ============================================================
@@ -525,11 +513,7 @@ SELECT
 FROM account
 WHERE balance < 0;
 
-
--- Negative balances may be valid in some banking products.
--- Therefore, this should be treated as a validation check,
--- not automatically as an error.
-
+---- Actual Result = 0
 
 -- ============================================================
 -- 22. NEGATIVE TRANSACTION AMOUNT
@@ -544,9 +528,7 @@ FROM transactions
 WHERE amount < 0;
 
 
--- Negative amounts may indicate a specific transaction
--- representation depending on the source-system design.
--- Investigate transaction_type before classifying them as errors.
+-- Actual Result = 0
 
 
 -- ============================================================
@@ -560,10 +542,6 @@ SELECT
 FROM transactions
 WHERE amount = 0;
 
-
--- Zero-value transactions may represent test, reversal,
--- validation or system-generated records.
--- Further investigation is required before classification.
 
 
 -- ============================================================
@@ -596,9 +574,6 @@ KEY DATA QUALITY FINDINGS
 
 10. UNKNOWN transaction status   : 99
 
-11. Account opened before
-    customer registration        : 10,103 records
-
 
 KEY OBSERVATIONS
 --------------------------------------------------------------
@@ -615,8 +590,6 @@ KEY OBSERVATIONS
 - Payment methods have relatively balanced transaction volumes.
 - Customer/account data covers approximately five years,
   while transaction data covers approximately one year.
-- 10,103 account records violate the expected chronological
-  relationship between customer registration and account opening.
 
 NEXT ANALYSIS
 --------------------------------------------------------------
