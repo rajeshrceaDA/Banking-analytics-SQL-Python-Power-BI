@@ -2,8 +2,8 @@
 -- Customer & Account Analysis
 -- Database: Banking Analytics
 -- Purpose:
--- Analyze customer segments, age groups, account ownership,
--- and account balance distribution.
+-- Analyze customer segments, customer age groups, account
+-- ownership, account types, account status and balances.
 -- ============================================================
 
 USE banking;
@@ -75,8 +75,8 @@ LEFT JOIN account a
 --
 -- Insight:
 -- 1,335 customers in the customer master do not have an
--- associated account record. This can be investigated further
--- as a potential customer activation or conversion opportunity.
+-- associated account record. This can be investigated as
+-- a potential customer activation or conversion opportunity.
 
 
 -- ============================================================
@@ -133,10 +133,6 @@ ORDER BY total_customers DESC;
 -- Customer distribution is relatively balanced across the
 -- three segments. Standard has the highest customer count,
 -- followed closely by Premium and Business.
---
--- This balanced distribution allows further comparison of
--- account ownership, balances, and transaction behavior
--- across segments.
 
 
 -- ============================================================
@@ -186,21 +182,19 @@ ORDER BY total_customers DESC;
 -- Youth (0-25)   = 1,179 customers (11.79%)
 --
 -- Insight:
--- The 61+ age group represents the largest customer segment
--- in the dataset, followed closely by customers aged 26-45.
+-- The 61+ age group represents the largest customer group,
+-- followed closely by customers aged 26-45.
 -- Customers aged 0-25 represent the smallest group.
 --
 -- Note:
--- Age is calculated using the year 2026 and YEAR(date_of_birth).
--- This provides an approximate age grouping rather than an
--- exact age based on the customer's birth date.
+-- Age is calculated using the year 2026 and YEAR(date_of_birth),
+-- so this is an approximate age grouping.
 
 
 -- ============================================================
--- 7. Customer Account Balance Analysis
+-- 7. Overall Account Balance Analysis
 -- Business Question:
--- What is the overall account balance position and average
--- balance across accounts and account-holding customers?
+-- What is the overall balance position across accounts?
 -- ============================================================
 
 SELECT
@@ -208,13 +202,11 @@ SELECT
     ROUND(MAX(balance), 2) AS max_account_balance,
     ROUND(MIN(balance), 2) AS min_account_balance,
     ROUND(
-        SUM(balance) /
-        COUNT(DISTINCT account_id),
+        SUM(balance) / COUNT(DISTINCT account_id),
         2
     ) AS avg_account_balance,
     ROUND(
-        SUM(balance) /
-        COUNT(DISTINCT customer_id),
+        SUM(balance) / COUNT(DISTINCT customer_id),
         2
     ) AS avg_balance_per_customer
 FROM account;
@@ -229,41 +221,163 @@ FROM account;
 -- Insight:
 -- The dataset contains approximately 4.99 billion in total
 -- account balances.
+-- The average account balance is approximately 250.8K.
+-- The average balance per account-holding customer is
+-- approximately 576.0K.
 --
--- The average account balance is approximately 250.8K,
--- while the average balance per account-holding customer
--- is approximately 576.0K.
+-- The difference between account-level and customer-level
+-- averages is influenced by customers holding multiple accounts.
+
+
+-- ============================================================
+-- 8. Account Type Analysis
+-- Business Question:
+-- How are accounts and balances distributed across
+-- different account types?
+-- ============================================================
+
+WITH account_type_analysis AS
+(
+    SELECT
+        account_type,
+        COUNT(*) AS total_accounts,
+        COUNT(DISTINCT customer_id) AS total_customers,
+        ROUND(SUM(balance), 2) AS total_balance
+    FROM account
+    GROUP BY account_type
+)
+
+SELECT
+    account_type,
+    total_accounts,
+    total_customers,
+    total_balance,
+    ROUND(
+        total_balance / total_accounts,
+        2
+    ) AS avg_account_balance
+FROM account_type_analysis
+ORDER BY total_accounts DESC;
+
+-- Result:
+-- Salary:
+--   Accounts = 6,721
+--   Customers = 4,866
+--   Total balance = 1,675,917,280.02
+--   Average account balance = 249,355.35
 --
--- The difference between these two averages is driven by
--- customers holding multiple accounts.
+-- Savings:
+--   Accounts = 6,649
+--   Customers = 4,892
+--   Total balance = 1,667,972,628.54
+--   Average account balance = 250,860.68
+--
+-- Current:
+--   Accounts = 6,530
+--   Customers = 4,857
+--   Total balance = 1,647,255,321.85
+--   Average account balance = 252,259.62
+--
+-- Insight:
+-- Account volumes are relatively balanced across Salary,
+-- Savings and Current accounts.
+--
+-- Current accounts have the highest average account balance,
+-- while Salary accounts have the highest total balance because
+-- they have the largest number of accounts.
+
+
+-- ============================================================
+-- 9. Account Status Analysis
+-- Business Question:
+-- What proportion of accounts are Active, Dormant or Closed?
+-- How much balance is associated with each status?
+-- ============================================================
+
+SELECT
+    account_status,
+    COUNT(*) AS total_accounts,
+    ROUND(
+        COUNT(*) * 100.0 /
+        (SELECT COUNT(*) FROM account),
+        2
+    ) AS account_percentage,
+    ROUND(SUM(balance), 2) AS total_balance
+FROM account
+GROUP BY account_status
+ORDER BY total_accounts DESC;
+
+-- Result:
+-- Active:
+--   Accounts = 11,856
+--   Share = 59.58%
+--   Total balance = 2,967,491,142.72
+--
+-- Dormant:
+--   Accounts = 4,023
+--   Share = 20.22%
+--   Total balance = 1,007,613,804.78
+--
+-- Closed:
+--   Accounts = 4,021
+--   Share = 20.21%
+--   Total balance = 1,016,040,282.91
+--
+-- Insight:
+-- Active accounts represent 59.58% of all accounts.
+-- Dormant and Closed accounts together represent approximately
+-- 40.43% of the account base.
+--
+-- The balance associated with Dormant and Closed accounts
+-- makes account-status analysis important for understanding
+-- account engagement and potential reactivation opportunities.
 
 
 -- ============================================================
 -- KEY CUSTOMER & ACCOUNT FINDINGS
 -- ============================================================
 --
--- 1. The dataset contains 10,000 unique customers.
+-- 1. 10,000 unique customers are present in the dataset.
 --
--- 2. There are 19,900 unique accounts associated with
---    8,665 customers.
+-- 2. 19,900 unique accounts are associated with 8,665
+--    customers.
 --
 -- 3. 1,335 customers do not have an associated account.
 --
 -- 4. Account-holding customers have an average of
---    approximately 2.3 accounts each.
+--    approximately 2.3 accounts.
 --
 -- 5. Customer segments are relatively balanced:
---    Standard 33.76%, Premium 33.41%, Business 32.83%.
+--    Standard = 33.76%
+--    Premium  = 33.41%
+--    Business = 32.83%
 --
--- 6. The 61+ age group is the largest customer age group
+-- 6. The 61+ age group is the largest customer group
 --    at 32.32%, while the 0-25 group is the smallest
 --    at 11.79%.
 --
 -- 7. Total account balance is approximately 4.99 billion,
 --    with an average account balance of approximately 250.8K.
 --
+-- 8. Salary accounts have the highest account volume
+--    at 6,721 accounts.
+--
+-- 9. Current accounts have the highest average balance
+--    at approximately 252.3K per account.
+--
+-- 10. Active accounts represent 59.58% of all accounts.
+--     Dormant and Closed accounts together represent
+--     approximately 40.43% of the account base.
+--
+-- 11. Dormant and Closed accounts together hold more than
+--     2.02 billion in account balances, making account
+--     reactivation and retention a potential area for
+--     further business analysis.
+--
 -- ============================================================
--- Next Analysis:
--- Account type, account status, transaction activity,
--- failed transactions, risk indicators, and business insights.
+-- NEXT ANALYSIS:
+-- Transaction Analysis will be handled separately.
+-- Planned areas include transaction volume, transaction
+-- value, payment methods, failed transactions, risk patterns,
+-- monthly trends and customer transaction behavior.
 -- ============================================================
